@@ -1,0 +1,67 @@
+{
+  "name": "tfc-multichat-streamer",
+  "version": "1.0.0",
+  "description": "TFC Lab: MultiChat Overlay — Twitch + TikTok + YouTube",
+  "main": "out/main/index.js",
+  "author": "TFC Lab",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "package": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "package:dir": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "firebase": "^12.12.0",
+    "tiktok-live-connector": "^1.1.7",
+    "tmi.js": "^1.8.5",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "cross-env": "^10.1.0",
+    "electron": "^29.4.6",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.3.1"
+  },
+  "build": {
+    "appId": "com.tfclab.multichat.streamer",
+    "productName": "TFC MultiChat Streamer",
+    "copyright": "TFC Lab",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/icon.png",
+      "artifactName": "TFC-MultiChat.exe"
+    },
+    "files": [
+      "out/**/*",
+      "assets/**/*",
+      "node_modules/tmi.js/**/*",
+      "node_modules/tiktok-live-connector/**/*",
+      "!node_modules/**/*.md",
+      "!node_modules/**/*.map"
+    ],
+    "extraMetadata": {
+      "main": "out/main/index.js"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "abytotfclab",
+      "repo": "tfc-multichat"
+    }
+  }
+}

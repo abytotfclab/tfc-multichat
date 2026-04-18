@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════
+   TFC MultiChat Overlay — Global CSS
+════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Platform Colors */
+  --twitch:  #9146FF;
+  --tiktok:  #00E5CC;   /* Turquesa neón — distinguible de YouTube */
+  --youtube: #FF0000;
+
+  /* Dark base */
+  --bg:         rgba(8, 8, 18, 0.92);
+  --bg-header:  rgba(4, 4, 12, 0.96);
+  --bg-msg:     rgba(18, 18, 30, 0.75);
+  --bg-msg-hov: rgba(28, 28, 44, 0.85);
+  --bg-input:   rgba(255,255,255,0.05);
+
+  /* Cyan neon */
+  --cyan:       #00f5ff;
+  --cyan-glow:  rgba(0,245,255,0.2);
+  --cyan-dim:   rgba(0,245,255,0.35);
+
+  /* Text */
+  --text:       #e8e8f8;
+  --text-sub:   #8888aa;
+  --text-muted: #44445a;
+
+  /* Borders */
+  --border:     rgba(255,255,255,0.07);
+  --border-cy:  rgba(0,245,255,0.25);
+
+  /* Typography */
+  --font:  'Inter', system-ui, sans-serif;
+  --mono:  'JetBrains Mono', monospace;
+
+  /* Radius */
+  --r-sm: 5px;
+  --r-md: 8px;
+  --r-lg: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,245,255,0.4); }
+
+/* Input */
+.input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 150ms;
+}
+.input:focus { border-color: var(--cyan-dim); }
+.input::placeholder { color: var(--text-muted); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-input);
+  color: var(--text-sub);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms;
+  white-space: nowrap;
+}
+.btn:hover { color: var(--cyan); border-color: var(--border-cy); }
+.btn:active { transform: scale(0.96); }
+.btn.active { background: rgba(0,245,255,0.1); color: var(--cyan); border-color: var(--border-cy); }
+.btn-clear {
+  background: rgba(255,51,85,0.12); color: #ff3355;
+  border-color: rgba(255,51,85,0.3);
+}
+.btn-clear:hover { box-shadow: 0 0 8px rgba(255,51,85,0.3); color: #ff3355; }
+
+/* Animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+}

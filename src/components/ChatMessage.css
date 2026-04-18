@@ -1,0 +1,180 @@
+.msg {
+  display: flex;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--r-md);
+  background: var(--bg-msg);
+  border-left: 2px solid var(--p-color);
+  animation: slideUp 0.18s ease both;
+  transition: background 120ms;
+  line-height: 1.45;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.msg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--p-bg);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.msg:hover { background: var(--bg-msg-hov); }
+
+/* Platform badge — SVG logo */
+.msg__platform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--p-bg);
+  border: 1px solid color-mix(in srgb, var(--p-color) 35%, transparent);
+  border-radius: 5px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 1px;
+  position: relative;
+  z-index: 1;
+  color: var(--p-color);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--p-color) 40%, transparent));
+}
+.msg__platform svg {
+  width: 11px;
+  height: 11px;
+  display: block;
+}
+
+.msg__body {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.msg__header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+
+.msg__avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.msg__badges {
+  display: flex;
+  gap: 2px;
+  font-size: 10px;
+}
+.msg__badge { line-height: 1; }
+
+.msg__author {
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg__time {
+  font-family: var(--mono);
+  font-size: 0.7em;
+  color: var(--text-muted);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.msg__text {
+  font-size: 1em;
+  color: var(--text);
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: inherit;
+}
+
+/* ─── Highlighting ─── */
+.msg--broadcaster {
+  border-left: 3px solid #ffd700 !important;
+  background: rgba(255, 215, 0, 0.05) !important;
+  box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.05);
+}
+.msg--moderator {
+  border-left: 3px solid #00ff88 !important;
+  background: rgba(0, 255, 136, 0.05) !important;
+}
+.msg--vip {
+  border-left: 3px solid #ff33bb !important;
+  background: rgba(255, 51, 187, 0.05) !important;
+}
+
+/* ─── Events (Special) ─── */
+.msg--event {
+  background: var(--bg-plate) !important;
+  border-left: 4px solid var(--p-color) !important;
+  box-shadow: 0 4px 15px -5px color-mix(in srgb, var(--p-color) 30%, transparent);
+  border-radius: var(--r-lg);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-top: 4px;
+}
+
+.msg--event::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    color-mix(in srgb, var(--p-color) 12%, transparent),
+    transparent 80%
+  );
+  pointer-events: none;
+}
+
+.msg__event-icon {
+  font-size: 1.5em;
+  filter: drop-shadow(0 0 5px var(--p-color));
+  animation: bounceRotate 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.msg--event .msg__author {
+  display: block;
+  font-size: 0.9em;
+  color: var(--p-color);
+  margin-bottom: -2px;
+}
+
+.msg__event-text {
+  font-weight: 500;
+  color: var(--text);
+  font-size: 0.95em;
+}
+
+/* Specific Event Accents */
+.msg--sub, .msg--resub { --p-color: #ff00ea; }
+.msg--gift { --p-color: #ff004c; animation: shake 0.5s ease both; }
+.msg--follow { --p-color: #00f5ff; }
+.msg--cheer { --p-color: #ffea00; }
+
+@keyframes bounceRotate {
+  0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+  70% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+

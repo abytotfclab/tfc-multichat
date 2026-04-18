@@ -1,0 +1,203 @@
+.license-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(circle at center, #0f0f15 0%, #050508 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #fff;
+}
+
+.license-box {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(20, 20, 28, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(0, 229, 204, 0.05);
+  text-align: center;
+}
+
+.license-header {
+  margin-bottom: 30px;
+}
+
+.license-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(0, 245, 255, 0.1);
+  color: #00f5ff;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+.license-header h1 {
+  font-size: 1.8rem;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #00f5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+.license-header p {
+  color: #888;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.license-hwid {
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.license-hwid label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.hwid-container {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hwid-container code {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #00f5ff;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hwid-container button {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #fff;
+  padding: 0 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hwid-container button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.license-hwid small {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  color: #444;
+}
+
+.license-input {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.license-input input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 20px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-align: center;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.license-input input:focus {
+  outline: none;
+  border-color: #00f5ff;
+  background: rgba(0, 245, 255, 0.02);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.1);
+}
+
+.license-error {
+  display: block;
+  color: #ff4d4d;
+  font-size: 0.75rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.license-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #00f5ff 0%, #00e5cc 100%);
+  color: #000;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 20px rgba(0, 245, 255, 0.2);
+}
+
+.license-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 245, 255, 0.3);
+  filter: brightness(1.1);
+}
+
+.license-btn:active {
+  transform: translateY(0);
+}
+
+.license-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.license-footer p {
+  font-size: 0.7rem;
+  color: #444;
+}
+
+.animate-pop {
+  animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.license-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 245, 255, 0.1);
+  border-top-color: #00f5ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

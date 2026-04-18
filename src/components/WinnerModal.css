@@ -1,0 +1,174 @@
+.winner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.winner-modal {
+  background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+  width: 90%;
+  max-width: 500px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  padding: 30px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 90vh;
+}
+
+.winner-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.winner-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.winner-header h2 {
+  color: #ffd700;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+}
+
+.winner-main-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.winner-avatar-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.winner-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+.winner-platform-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  background: #000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border: 2px solid #ffd700;
+}
+
+.winner-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.winner-platform-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+/* Winner Word Reveal inside Modal */
+.winner-word-reveal {
+  margin-top: 5px;
+  padding: 8px 15px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.winner-word-reveal span { font-size: 9px; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; }
+.winner-word-reveal strong { font-size: 18px; color: #ffd700; letter-spacing: 0.1em; }
+
+/* Message Feed Section in Modal */
+.winner-feed-section {
+  flex: 1;
+  min-height: 150px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feed-header {
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.feed-header span { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; }
+.feed-badge { background: #ffd700; color: #000; font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 100px; }
+
+.winner-feed-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.winner-feed-list::-webkit-scrollbar { width: 4px; }
+.winner-feed-list::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 10px; }
+
+.feed-empty { text-align: center; color: rgba(255,255,255,0.15); font-size: 11px; margin-top: 40px; font-style: italic; }
+
+.winner-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.winner-btn:hover { transform: scale(1.02); box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

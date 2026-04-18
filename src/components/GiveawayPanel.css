@@ -1,0 +1,379 @@
+.giveaway {
+  width: 320px;
+  height: 100%;
+  max-height: 100%;
+  background: rgba(15, 15, 20, 1);
+  border-left: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.giveaway__header {
+  padding: 10px 14px;
+  background: rgba(4, 4, 12, 0.98);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.giveaway__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.giveaway__plat-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.plat-filter-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  filter: grayscale(1);
+  opacity: 0.4;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+
+.plat-filter-btn.active {
+  filter: grayscale(0);
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.giveaway__title {
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.giveaway__mode-selector {
+  display: flex;
+  background: rgba(0,0,0,0.3);
+  padding: 4px;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.mode-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+.mode-btn.active {
+  background: rgba(255, 215, 0, 0.1);
+  color: #ffd700;
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.2);
+}
+
+.giveaway__body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* Guess Mode Styles */
+.giveaway__guess-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.guess__config {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guess__config label {
+  font-size: 9px;
+  color: #ffd700;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.guess__config input {
+  background: rgba(0,0,0,0.5);
+  border: 2px solid rgba(255, 215, 0, 0.2);
+  border-radius: 6px;
+  padding: 12px;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.guess__config input:focus {
+  border-color: #ffd700;
+}
+
+.guess__hint {
+  font-size: 9px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+.guess__display-area {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.guess__active-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 215, 0, 0.05);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.hint-locked {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd700;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.hint-display {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hint-letter {
+  width: 22px;
+  height: 30px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.hint-letter.revealed {
+  color: #ffd700;
+  border-bottom-color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: revealPop 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes revealPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.btn-hint {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-hint:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+.guess__status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-start-guess:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.guess__active-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 245, 255, 0.1);
+  padding: 15px 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: #00f5ff;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #00f5ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00f5ff;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.4; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.2); }
+}
+
+/* Original Raffle Styles */
+.giveaway__info {
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+
+.info__stat { display: flex; flex-direction: column; gap: 0px; }
+.stat__val { font-size: 24px; font-weight: 800; color: #ffd700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+.stat__label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+.giveaway__config {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+}
+.giveaway__config label {
+  font-size: 7px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  text-align: left;
+}
+.giveaway__config input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: #ffd700;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+}
+
+.giveaway__list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  padding-right: 2px;
+  min-height: 50px;
+}
+
+.giveaway__list::-webkit-scrollbar { width: 3px; }
+.giveaway__list::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.3); border-radius: 10px; }
+
+.participant-chip {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 2px 5px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.participant-chip img { width: 10px; height: 10px; border-radius: 50%; }
+.participant-chip span { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
+
+.giveaway__actions {
+  padding: 10px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  background: rgba(10, 10, 15, 1);
+}
+
+.btn {
+  height: 34px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.btn-roll {
+  flex: 1;
+  background: #ffd700;
+  color: #000;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.btn-clear-giveaway {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.05); color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+
+.btn-sim {
+  padding: 0 8px; background: rgba(0, 245, 255, 0.1); color: #00f5ff;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  font-size: 9px;
+}
+
+.empty-msg { width: 100%; text-align: center; color: var(--text-muted); font-size: 10px; margin-top: 10px; opacity: 0.5; }
+
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
