@@ -1,6 +1,6 @@
 {
   "name": "tfc-multichat-streamer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "TFC Lab: MultiChat Overlay — Twitch + TikTok + YouTube",
   "main": "out/main/index.js",
   "author": "TFC Lab",
@@ -37,15 +37,18 @@
     },
     "win": {
       "target": [
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
+        "nsis",
+        "portable"
       ],
       "icon": "assets/icons/icon.png",
-      "artifactName": "TFC-MultiChat.exe"
+      "artifactName": "TFC-MultiChat-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TFC MultiChat Streamer"
     },
     "files": [
       "out/**/*",

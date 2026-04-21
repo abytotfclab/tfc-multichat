@@ -109,6 +109,21 @@ export default function SettingsPanel({ onClose, config, onSaveConfig }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function handleCheckUpdates() {
+    setLoading(l => ({ ...l, updates: true }))
+    try {
+      const res = await window.electron?.checkForUpdates()
+      if (res?.success) {
+        alert(`Búsqueda finalizada. Versión actual detectada en la nube: v${res.updateInfo.version}`)
+      } else {
+        alert('No se encontraron actualizaciones o hubo un error: ' + (res?.error || 'Unknown'))
+      }
+    } catch (e) {
+      alert('Error: ' + e.message)
+    }
+    setLoading(l => ({ ...l, updates: false }))
+  }
+
   function testVoice(voice) {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance('Hola equipo, estoy listo para leer el chat.')
@@ -281,6 +296,13 @@ export default function SettingsPanel({ onClose, config, onSaveConfig }) {
       </div>
 
       <div className="settings__actions">
+        <button 
+          className={`btn btn-updates ${loading.updates ? 'loading' : ''}`} 
+          onClick={handleCheckUpdates}
+          disabled={loading.updates}
+        >
+          {loading.updates ? 'Buscando...' : '🔄 Buscar Actualizaciones'}
+        </button>
         <button className={`btn btn-copy ${copied ? 'active' : ''}`} onClick={handleCopyMessage}>{copied ? '✓ Copiado' : '📑 Copiar'}</button>
         <button className="btn btn-save" onClick={saveDisplay}>✓ Guardar</button>
       </div>

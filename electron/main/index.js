@@ -262,7 +262,17 @@ app.whenReady().then(() => {
   createWindow()
 
   // -- Auto-Updater Logic ----------------------------------------------------
+  autoUpdater.autoDownload = true
   autoUpdater.checkForUpdatesAndNotify()
+
+  ipcMain.handle('app:check-for-updates', async () => {
+    try {
+      const result = await autoUpdater.checkForUpdates()
+      return { success: true, updateInfo: result.updateInfo }
+    } catch (e) {
+      return { success: false, error: e.message }
+    }
+  })
 
   autoUpdater.on('update-available', () => {
     mainWindow?.webContents.send('update:status', 'Disponible nueva versión. Descargando...')

@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electron', {
   // Utils
   openExternal:   (url) => ipcRenderer.invoke('app:openExternal', url),
+  checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
 
   // Window
   close:          () => ipcRenderer.invoke('win:close'),

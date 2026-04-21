@@ -1,6 +1,6 @@
 # 🚀 SKILL: Deploy Nueva Versión — TFC MultiChat Streamer
 
-> **Última versión desplegada:** v1.0.2
+> **Última versión desplegada:** v1.0.3
 
 > Cuando el usuario diga "lee el deploy" o similar, ejecuta estos pasos EN ORDEN, sin pedir confirmación entre ellos. Al final, reporta un resumen.
 
@@ -9,49 +9,48 @@
 ## VARIABLES A PREGUNTAR ANTES DE EMPEZAR
 
 Antes de arrancar, pregunta al usuario:
-1. **¿Cuál es el número de la nueva versión?** (ej: `1.0.1`, `1.1.0`, `2.0.0`)
-2. **¿Cuál es el mensaje del changelog?** (qué cambios hay en esta versión, ej: "Añadido soporte para raids en Twitch")
+1. **¿Cuál es el número de la nueva versión?** (ej: `1.0.3`, `1.1.0`)
+2. **¿Cuál es el mensaje del changelog?** (ej: "Soporte para NSIS y Auto-update")
 
 ---
 
 ## PASOS DE EJECUCIÓN
 
-### PASO 1 — Actualizar la versión en package.json
-- Abre `e:\MULTI CHAT APP 2026\package.json`
-- Cambia el campo `"version"` al número que el usuario indicó.
+### PASO 1 — Actualizar Versionado en el Código
+- Abre `e:\MULTI CHAT APP 2026\package.json` y cambia el campo `"version"` al número indicado.
+- Abre `e:\MULTI CHAT APP 2026\src\App.jsx` y actualiza `brand__version` (ej: `v1.0.2`).
+- Actualiza la línea de "Última versión desplegada" al principio de este archivo (`DEPLOY.skill.md`).
 
-### PASO 2 — Commit del nuevo código
+### PASO 2 — Commit y Creación de Tag
 Ejecuta estos comandos en orden:
-```
+```powershell
 git add .
 git commit -m "release: v{VERSION} - {CHANGELOG}"
+git tag v{VERSION}
 git push origin main
+git push origin v{VERSION}
 ```
-*(Reemplaza `{VERSION}` y `{CHANGELOG}` con los datos del usuario)*
 
-### PASO 3 — Build del ejecutable
-Ejecuta en `e:\MULTI CHAT APP 2026`:
-```
+### PASO 3 — Build del ejecutable e Instalador
+Ejecuta en `e:\MULTI CHAT APP 2026` (CMD COMO ADMINISTRADOR si da error de symlinks):
+```powershell
 npm run package
 ```
-Espera a que termine. El archivo resultante estará en:
-`e:\MULTI CHAT APP 2026\dist\TFC-MultiChat.exe`
+- **IMPORTANTE:** Este comando generará en la carpeta `dist`:
+  1. `TFC-MultiChat-{VERSION}.exe` (Instalador NSIS)
+  2. `TFC-MultiChat-{VERSION}.exe.blockmap`
+  3. `latest.yml` (CRÍTICO para el Auto-Updater)
 
-### PASO 4 — Crear el GitHub Release
-Informa al usuario que debe hacer este paso MANUALMENTE (no tengo acceso directo a la API de GitHub Releases):
+### PASO 4 — Finalizar Release en GitHub
+Informa al usuario que debe subir los 3 archivos a la Release de GitHub:
 
-> ⚠️ **ACCIÓN MANUAL REQUERIDA:**
-> 1. Ve a: https://github.com/abytotfclab/tfc-multichat/releases/new
-> 2. En "Choose a tag", escribe `v{VERSION}` y selecciona "Create new tag".
-> 3. En "Release title", escribe: `TFC MultiChat v{VERSION}`
-> 4. En la descripción, pega el changelog: `{CHANGELOG}`
-> 5. Sube el archivo: `dist\TFC-MultiChat.exe`
-> 6. Pulsa **"Publish release"**.
-
-### PASO 5 — Verificación final
-- Confirma que el build terminó sin errores.
-- Confirma que el `package.json` tiene la versión correcta.
-- Informa al usuario que cuando sus clientes abran la app, el auto-updater detectará la nueva versión en el próximo arranque.
+> ⚠️ **ACCIÓN FINAL REQUERIDA (Auto-Updater):**
+> 1. Ve a la release: https://github.com/abytotfclab/tfc-multichat/releases/edit/v{VERSION}
+> 2. **SUBE ESTOS 3 ARCHIVOS (Obligatorios):**
+>    - `dist/TFC-MultiChat-{VERSION}.exe`
+>    - `dist/latest.yml`
+>    - `dist/TFC-MultiChat-{VERSION}.exe.blockmap`
+> 3. Pulsa **"Update release"**.
 
 ---
 
@@ -60,19 +59,17 @@ Informa al usuario que debe hacer este paso MANUALMENTE (no tengo acceso directo
 Al terminar, genera un resumen como este:
 
 ```
-✅ Deploy completado — TFC MultiChat v{VERSION}
+✅ Deploy iniciado — TFC MultiChat v{VERSION}
 
-📦 Build:     dist/TFC-MultiChat.exe
-🐙 GitHub:    https://github.com/abytotfclab/tfc-multichat/releases
-🔄 Updater:   Los usuarios recibirán la actualización en el próximo arranque
+📦 Instalador: dist/TFC-MultiChat-{VERSION}.exe
+📄 Metadata:   latest.yml (Cargado)
+🔗 GitHub:     https://github.com/abytotfclab/tfc-multichat/releases/edit/v{VERSION}
 
-⚠️ Recuerda publicar el Release en GitHub con el .exe para activar el auto-updater.
+⚠️ Recuerda subir el .exe Y el latest.yml para que el auto-updater funcione.
 ```
 
 ---
 
 ## NOTAS
-- El repositorio es: `https://github.com/abytotfclab/tfc-multichat`
-- El target de build es Windows x64 Portable (`TFC-MultiChat.exe`)
-- El auto-updater usa `electron-updater` y busca en GitHub Releases automáticamente.
-- El `package.json` debe tener la sección `"publish"` con `"provider": "github"`.
+- El instalador NSIS preguntará ahora si se desea crear acceso directo.
+- Se ha añadido un botón manual de "Buscar Actualizaciones" en Ajustes.

@@ -147,7 +147,7 @@ export default function App() {
           {/* Brand */}
           <div className="header__brand">
             <span className="brand__logo">MC</span>
-            <span className="brand__version">v1.0.2</span>
+            <span className="brand__version">v1.0.3</span>
             {connectedCount > 0 && (
               <span className="brand__count">{connectedCount}</span>
             )}
