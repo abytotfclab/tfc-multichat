@@ -27,6 +27,9 @@ const PLATFORM = {
   youtube: { Logo: YouTubeLogo, color: '#FF0000', bg: 'rgba(255,0,0,0.10)' },
 }
 
+const BADGE_ICONS = {
+  broadcaster: '👑',
+  moderator:   '🛡️',
   subscriber:  '★',
   vip:         '💎',
 }

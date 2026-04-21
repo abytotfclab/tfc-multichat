@@ -150,11 +150,19 @@ function updateStatus(platform, data) {
 // Twitch Setup
 import tmi from 'tmi.js'
 let twitchClient = null
-function connectTwitch(channel) {
-  if (twitchClient) twitchClient.disconnect()
-  twitchClient = new tmi.Client({ channels: [channel] })
-  twitchClient.connect().then(() => updateStatus('twitch', { connected: true, channel }))
-  twitchClient.on('message', (chan, tags, message, self) => {
+async function connectTwitch(channel) {
+  if (twitchClient) {
+    try { await twitchClient.disconnect() } catch(e) {}
+  }
+  
+  try {
+    twitchClient = new tmi.Client({ channels: [channel] })
+    await twitchClient.connect()
+    updateStatus('twitch', { connected: true, channel })
+    
+    // Reset listeners
+    twitchClient.removeAllListeners('message')
+    twitchClient.on('message', (chan, tags, message, self) => {
     if (self) return
     mainWindow?.webContents.send('chat:message', {
       id: tags.id, type: 'chat', platform: 'twitch', author: tags['display-name'] || tags.username,
@@ -178,22 +186,34 @@ function connectTwitch(channel) {
     })
   })
 
-  twitchClient.on('cheer', (channel, userstate, message) => {
-    mainWindow?.webContents.send('chat:message', {
-      type: 'event', event: 'cheer', platform: 'twitch', author: userstate['display-name'],
-      message: `¡Envió ${userstate.bits} bits! 💎`, color: '#ffea00', timestamp: Date.now()
+    twitchClient.on('cheer', (channel, userstate, message) => {
+      mainWindow?.webContents.send('chat:message', {
+        type: 'event', event: 'cheer', platform: 'twitch', author: userstate['display-name'],
+        message: `¡Envió ${userstate.bits} bits! 💎`, color: '#ffea00', timestamp: Date.now()
+      })
     })
-  })
+
+    return { ok: true }
+  } catch (e) {
+    console.error("[TWITCH] Error:", e.message)
+    return { ok: false, error: e.message }
+  }
 }
 
 // TikTok Setup
 import { WebcastPushConnection } from 'tiktok-live-connector'
 let tiktokClient = null
-function connectTikTok(username) {
-  if (tiktokClient) tiktokClient.disconnect()
-  tiktokClient = new WebcastPushConnection(username)
-  tiktokClient.connect().then(() => updateStatus('tiktok', { connected: true, username }))
-  tiktokClient.on('chat', data => {
+async function connectTikTok(username) {
+  if (tiktokClient) {
+    try { await tiktokClient.disconnect() } catch(e) {}
+  }
+
+  try {
+    tiktokClient = new WebcastPushConnection(username)
+    await tiktokClient.connect()
+    updateStatus('tiktok', { connected: true, username })
+
+    tiktokClient.on('chat', data => {
     mainWindow?.webContents.send('chat:message', {
       id: data.msgId, type: 'chat', platform: 'tiktok', author: data.nickname || data.uniqueId,
       message: data.comment, color: '#00f5ff', avatar: data.profilePictureUrl,
@@ -223,13 +243,19 @@ function connectTikTok(username) {
     }
   })
 
-  tiktokClient.on('member', data => {
-    mainWindow?.webContents.send('chat:message', {
-      type: 'event', event: 'join', platform: 'tiktok', author: data.nickname || data.uniqueId,
-      message: `¡Se unió al LIVE! 👋`, color: '#00f5ff', 
-      avatar: data.profilePictureUrl, timestamp: Date.now()
+    tiktokClient.on('member', data => {
+      mainWindow?.webContents.send('chat:message', {
+        type: 'event', event: 'join', platform: 'tiktok', author: data.nickname || data.uniqueId,
+        message: `¡Se unió al LIVE! 👋`, color: '#00f5ff', 
+        avatar: data.profilePictureUrl, timestamp: Date.now()
+      })
     })
-  })
+
+    return { ok: true }
+  } catch (e) {
+    console.error("[TIKTOK] Error:", e.message)
+    return { ok: false, error: e.message }
+  }
 }
 
 app.whenReady().then(() => {
@@ -264,8 +290,49 @@ app.whenReady().then(() => {
   ipcMain.handle('twitch:disconnect', () => { twitchClient?.disconnect(); updateStatus('twitch', { connected: false }) })
   ipcMain.handle('tiktok:connect',   (_, { username }) => connectTikTok(username))
   ipcMain.handle('tiktok:disconnect', () => { tiktokClient?.disconnect(); updateStatus('tiktok', { connected: false }) })
-  ipcMain.handle('youtube:connect',    () => updateStatus('youtube', { connected: true, channel: 'Live' }))
-  ipcMain.handle('youtube:disconnect', () => updateStatus('youtube', { connected: false }))
+  ipcMain.handle('youtube:connect',    () => { updateStatus('youtube', { connected: true, channel: 'Live' }); return { ok: true } })
+  ipcMain.handle('youtube:disconnect', () => { updateStatus('youtube', { connected: false }); return { ok: true } })
+
+  // -- Login Handlers --------------------------------------------------------
+  async function openLoginWindow(url, title) {
+    return new Promise((resolve) => {
+      const loginWin = new BrowserWindow({
+        width: 600,
+        height: 800,
+        title: title,
+        parent: mainWindow,
+        modal: true,
+        show: false,
+        frame: true,
+        transparent: false,
+        alwaysOnTop: true, // Crucial as the main window might be pinned
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true
+        }
+      })
+
+      loginWin.loadURL(url)
+      loginWin.once('ready-to-show', () => loginWin.show())
+
+      loginWin.on('closed', () => {
+        resolve({ ok: true })
+      })
+    })
+  }
+
+  ipcMain.handle('twitch:login', async () => {
+    return await openLoginWindow('https://www.twitch.tv/login', 'Login Twitch')
+  })
+
+  ipcMain.handle('tiktok:login', async () => {
+    return await openLoginWindow('https://www.tiktok.com/login', 'Login TikTok')
+  })
+
+  ipcMain.handle('youtube:login', async () => {
+    return await openLoginWindow('https://accounts.google.com/ServiceLogin?service=youtube', 'Login YouTube')
+  })
 
   ipcMain.handle('win:close',          () => mainWindow?.hide())
   ipcMain.handle('win:quit',           () => { app.exit(0) })
