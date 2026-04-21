@@ -48,7 +48,7 @@ const GiveawayPanel = () => {
              <button 
                 className={`plat-filter-btn ${giveawayFilters.tiktok ? 'active' : ''}`}
                 onClick={() => toggleGiveawayFilter('tiktok')}
-             >⚡ TIKTOK</button>
+             >🧡 TIKTOK</button>
              <button 
                 className={`plat-filter-btn ${giveawayFilters.youtube ? 'active' : ''}`}
                 onClick={() => toggleGiveawayFilter('youtube')}

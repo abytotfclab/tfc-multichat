@@ -23,7 +23,7 @@ const YouTubeLogo = () => (
 
 const PLATFORM = {
   twitch:  { Logo: TwitchLogo,  color: '#9146FF', bg: 'rgba(145,70,255,0.15)' },
-  tiktok:  { Logo: TikTokLogo,  color: '#00E5CC', bg: 'rgba(0,229,204,0.12)' },
+  tiktok:  { Logo: TikTokLogo,  color: '#FF8C00', bg: 'rgba(255,140,0,0.12)' },
   youtube: { Logo: YouTubeLogo, color: '#FF0000', bg: 'rgba(255,0,0,0.10)' },
 }
 

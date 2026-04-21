@@ -9,9 +9,9 @@ import LicenseGuard from './components/LicenseGuard'
 import './App.css'
 
 const PLATFORMS = [
-  { id: 'twitch',  icon: '💜', color: '#9146FF' },
-  { id: 'tiktok',  icon: '⚡', color: '#00E5CC' },
-  { id: 'youtube', icon: '❤️', color: '#FF0000' },
+  { id: 'twitch', icon: '💜', name: 'Twitch', color: '#9146FF' },
+  { id: 'tiktok', icon: '🧡', name: 'TikTok Live', color: '#FF8C00' },
+  { id: 'youtube', icon: '❤️', name: 'YouTube Live', color: '#FF0000' }
 ]
 
 function LogsView() {
@@ -203,7 +203,7 @@ function App() {
               onClick={() => window.electron?.openLogs()}
               title="Click para ver logs"
             >
-              v1.0.4
+              v1.0.5
             </span>
             {connectedCount > 0 && (
               <span className="brand__count">{connectedCount}</span>

@@ -249,7 +249,7 @@ async function connectTikTok(input) {
       platform: 'tiktok', 
       author: data.nickname || data.uniqueId,
       message: data.comment, 
-      color: '#00f5ff', 
+      color: '#FF8C00', 
       avatar: data.profilePictureUrl,
       badges,
       timestamp: Date.now()

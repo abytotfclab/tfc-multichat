@@ -429,7 +429,7 @@
 .log-type { font-weight: bold; margin-right: 8px; }
 
 .log-twitch { color: #9146FF; }
-.log-tiktok { color: #25F4EE; }
+.log-tiktok { color: #FF8C00; }
 .log-youtube { color: #FF0000; }
 .log-error  { color: #ff3355; background: rgba(255, 51, 85, 0.1); padding: 0 4px; border-radius: 2px; }
 .log-info   { color: #00ff88; }

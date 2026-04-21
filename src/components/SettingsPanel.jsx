@@ -42,7 +42,7 @@ export default function SettingsPanel({ onClose, config, onSaveConfig }) {
       disconnect: () => window.electron?.twitch.disconnect(),
     },
     {
-      id: 'tiktok', icon: '🩵', name: 'TikTok Live', color: '#00E5CC',
+      id: 'tiktok', icon: '🧡', name: 'TikTok Live', color: '#FF8C00',
       value: tkInput, setValue: setTkInput,
       placeholder: '@usuario',
       hint: 'Haz login para cargar el chat sin bloqueos de TikTok.',
