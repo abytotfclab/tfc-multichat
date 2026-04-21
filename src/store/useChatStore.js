@@ -35,6 +35,7 @@ export const useChatStore = create((set, get) => ({
   licenseLoading: true,
 
   showGiveaway: false,
+  showTranslator: false,
   giveawayParticipants: [],
   winner: null,
   
@@ -173,7 +174,8 @@ export const useChatStore = create((set, get) => ({
   closeInspection: () => set({ inspectedUser: null }),
 
   // Giveaway Actions
-  toggleGiveawayUI: () => set(s => ({ showGiveaway: !s.showGiveaway })),
+  toggleGiveawayUI: () => set(s => ({ showGiveaway: !s.showGiveaway, showTranslator: false, showSettings: false })),
+  toggleTranslator: () => set(s => ({ showTranslator: !s.showTranslator, showGiveaway: false, showSettings: false })),
   toggleGiveawayFilter: (platform) => set(s => ({ giveawayFilters: { ...s.giveawayFilters, [platform]: !s.giveawayFilters[platform] } })),
   clearGiveaway: () => set({ giveawayParticipants: [], winner: null, guessActive: false, guessHintLevel: 0, revealedIndices: [] }),
   setGiveawayMode: (mode) => set({ giveawayMode: mode, winner: null, guessActive: false, giveawayParticipants: [], guessHintLevel: 0, revealedIndices: [] }),

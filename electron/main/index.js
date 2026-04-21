@@ -12,11 +12,14 @@ const indexHtml = join(__dirname, '../renderer/index.html')
 const preload = join(__dirname, '../preload/index.js')
 
 let mainWindow = null
+let splashWindow = null
 let logsWindow = null
 let appLogs = []
 let twitchClient = null
 let tiktokClient = null
 let youtubeClient = null
+let rendererReady = false
+let pendingUpdateStatus = null
 
 const CONFIG_PATH = join(app.getPath('userData'), 'config.json')
 
@@ -79,6 +82,8 @@ let lastBounds = { width: 600, height: 800, x: 100, y: 100 }
 let myMaximizedState = false
 
 function createWindow() {
+  const iconPath = join(__dirname, '../../assets/icons/icon.png')
+
   mainWindow = new BrowserWindow({
     width: config.display?.width || 600,
     height: config.display?.height || 800,
@@ -86,6 +91,7 @@ function createWindow() {
     minHeight: 500,
     show: false,
     frame: false,
+    icon: iconPath,
     transparent: true,
     alwaysOnTop: config.display?.alwaysOnTop ?? true,
     opacity: config.display?.opacity ?? 0.88,
@@ -99,6 +105,10 @@ function createWindow() {
   })
 
   mainWindow.on('ready-to-show', () => {
+    if (splashWindow) {
+      splashWindow.destroy()
+      splashWindow = null
+    }
     mainWindow.show()
   })
 
@@ -116,6 +126,15 @@ function createWindow() {
   } else {
     mainWindow.loadFile(indexHtml)
   }
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    rendererReady = true
+    if (pendingUpdateStatus) {
+      mainWindow?.webContents.send('update:status', pendingUpdateStatus)
+      pendingUpdateStatus = null
+    }
+    autoUpdater.checkForUpdates().catch(e => sendLog('ERROR', `Update check failed: ${e.message}`))
+  })
 }
 
 let status = {
@@ -313,24 +332,15 @@ async function connectYouTube(input) {
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  app.setAppUserModelId('com.tfc.multichat')
+  createSplashWindow()
+  
+  setTimeout(() => {
+    createWindow()
+  }, 500)
 
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = false
-
-  // Wait for renderer to load before sending any update messages
-  let rendererReady = false
-  let pendingUpdateStatus = null
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    rendererReady = true
-    if (pendingUpdateStatus) {
-      mainWindow?.webContents.send('update:status', pendingUpdateStatus)
-      pendingUpdateStatus = null
-    }
-    // Now safe to check for updates
-    autoUpdater.checkForUpdates().catch(e => sendLog('ERROR', `Update check failed: ${e.message}`))
-  })
 
   function sendUpdateStatus(status) {
     if (rendererReady) {
@@ -432,6 +442,93 @@ app.whenReady().then(() => {
       loginWin.loadURL(url)
       loginWin.once('ready-to-show', () => loginWin.show())
       loginWin.on('closed', () => resolve({ ok: true }))
+    })
+  }
+
+  function createSplashWindow() {
+    const iconPath = join(__dirname, '../../assets/icons/icon.png')
+    let iconData = ""
+    try {
+      iconData = readFileSync(iconPath).toString('base64')
+    } catch (e) {
+      console.error("Icon not found for splash", e)
+    }
+
+    splashWindow = new BrowserWindow({
+      width: 400,
+      height: 400,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      center: true,
+      show: false,
+      hasShadow: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    })
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+              background: transparent;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              font-family: sans-serif;
+            }
+            .container {
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
+            img {
+              width: 220px;
+              height: 220px;
+              object-fit: contain;
+              filter: drop-shadow(0 0 25px rgba(0, 206, 209, 0.7));
+              animation: pulse 2s infinite ease-in-out;
+            }
+            .loader {
+              margin-top: 20px;
+              width: 40px;
+              height: 40px;
+              border: 4px solid rgba(255, 255, 255, 0.1);
+              border-left-color: #00CED1;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            }
+            @keyframes pulse {
+              0% { transform: scale(0.92); opacity: 0.8; }
+              50% { transform: scale(1); opacity: 1; }
+              100% { transform: scale(0.92); opacity: 0.8; }
+            }
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <img src="data:image/png;base64,${iconData}" />
+            <div class="loader"></div>
+          </div>
+        </body>
+      </html>
+    `
+
+    splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`)
+    splashWindow.once('ready-to-show', () => {
+      splashWindow.show()
     })
   }
 

@@ -3,6 +3,7 @@ import { useChatStore } from './store/useChatStore'
 import ChatList from './components/ChatList'
 import SettingsPanel from './components/SettingsPanel'
 import GiveawayPanel from './components/GiveawayPanel'
+import TranslatorPanel from './components/TranslatorPanel'
 import WinnerModal from './components/WinnerModal'
 import UserInspectPanel from './components/UserInspectPanel'
 import LicenseGuard from './components/LicenseGuard'
@@ -58,7 +59,7 @@ function App() {
   const { 
     init, status, messages, clearMessages, isPaused, togglePause, 
     toggleFilter, filters, ttsEnabled, toggleTTS, toggleGiveawayUI, 
-    showGiveaway, inspectedUser 
+    showGiveaway, inspectedUser, showTranslator, toggleTranslator
   } = useChatStore()
   
   const [showSettings, setShowSettings] = useState(false)
@@ -203,7 +204,7 @@ function App() {
               onClick={() => window.electron?.openLogs()}
               title="Click para ver logs"
             >
-              v1.0.6
+              v1.0.7
             </span>
             {connectedCount > 0 && (
               <span className="brand__count">{connectedCount}</span>
@@ -250,6 +251,11 @@ function App() {
               onClick={toggleClickThrough}
               title="Modo Click-Through"
             >🖱️</button>
+            <button
+              className={`icon-btn ${showTranslator ? 'active' : ''}`}
+              onClick={toggleTranslator}
+              title="Traductor en vivo"
+            >🌐</button>
           </div>
 
           {/* Controls */}
@@ -320,6 +326,12 @@ function App() {
                 onClose={() => setShowSettings(false)}
                 onSaveConfig={handleSaveConfig}
               />
+            </div>
+          )}
+
+          {showTranslator && (
+            <div className="overlay__translator">
+              <TranslatorPanel />
             </div>
           )}
         </div>

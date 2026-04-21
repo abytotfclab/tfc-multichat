@@ -1,6 +1,6 @@
 # 🚀 SKILL: Deploy Nueva Versión — TFC MultiChat Streamer
 
-> **Última versión desplegada:** v1.0.6
+> **Última versión desplegada:** v1.0.7
 
 > Cuando el usuario diga "lee el deploy" o similar, ejecuta estos pasos EN ORDEN, sin pedir confirmación entre ellos. Al final, reporta un resumen.
 
