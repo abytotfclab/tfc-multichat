@@ -1,6 +1,6 @@
 {
   "name": "tfc-multichat-streamer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "TFC Lab: MultiChat Overlay — Twitch + TikTok + YouTube",
   "main": "out/main/index.js",
   "author": "TFC Lab",

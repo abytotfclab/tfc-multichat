@@ -98,24 +98,6 @@ function createWindow() {
     }
   })
 
-  ipcMain.handle('updater:quit-and-install', () => {
-    autoUpdater.quitAndInstall()
-  })
-
-  autoUpdater.on('update-available', (info) => {
-    sendLog('UPDATER', `Update available: v${info.version}`)
-    mainWindow?.webContents.send('update:status', 'UPDATE_AVAILABLE')
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    sendLog('UPDATER', `Update v${info.version} downloaded`)
-    mainWindow?.webContents.send('update:status', 'UPDATE_DOWNLOADED')
-  })
-
-  autoUpdater.on('error', (err) => {
-    sendLog('ERROR', `Updater Error: ${err.message}`)
-  })
-
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
@@ -334,12 +316,56 @@ app.whenReady().then(() => {
   createWindow()
 
   autoUpdater.autoDownload = true
-  autoUpdater.checkForUpdatesAndNotify()
+  autoUpdater.autoInstallOnAppQuit = false
+
+  // Wait for renderer to load before sending any update messages
+  let rendererReady = false
+  let pendingUpdateStatus = null
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    rendererReady = true
+    if (pendingUpdateStatus) {
+      mainWindow?.webContents.send('update:status', pendingUpdateStatus)
+      pendingUpdateStatus = null
+    }
+    // Now safe to check for updates
+    autoUpdater.checkForUpdates().catch(e => sendLog('ERROR', `Update check failed: ${e.message}`))
+  })
+
+  function sendUpdateStatus(status) {
+    if (rendererReady) {
+      mainWindow?.webContents.send('update:status', status)
+    } else {
+      pendingUpdateStatus = status
+    }
+  }
+
+  autoUpdater.on('update-available', (info) => {
+    sendLog('UPDATER', `Update available: v${info.version}`)
+    sendUpdateStatus('UPDATE_AVAILABLE')
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendLog('UPDATER', `Update v${info.version} ready to install`)
+    sendUpdateStatus('UPDATE_DOWNLOADED')
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    sendLog('UPDATER', 'No updates available')
+  })
+
+  autoUpdater.on('error', (err) => {
+    sendLog('ERROR', `Updater Error: ${err.message}`)
+  })
+
+  ipcMain.handle('updater:quit-and-install', () => {
+    autoUpdater.quitAndInstall(false, true)
+  })
 
   ipcMain.handle('app:check-for-updates', async () => {
     try {
       const result = await autoUpdater.checkForUpdates()
-      return { success: true, updateInfo: result.updateInfo }
+      return { success: true, updateInfo: result?.updateInfo }
     } catch (e) {
       return { success: false, error: e.message }
     }

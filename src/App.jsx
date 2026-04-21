@@ -203,7 +203,7 @@ function App() {
               onClick={() => window.electron?.openLogs()}
               title="Click para ver logs"
             >
-              v1.0.5
+              v1.0.6
             </span>
             {connectedCount > 0 && (
               <span className="brand__count">{connectedCount}</span>
@@ -326,14 +326,6 @@ function App() {
 
         <WinnerModal />
 
-        {/* ── Update Notification ── */}
-        {updateMsg && (
-          <div className="update-toast">
-            <span className="update-toast__icon">🚀</span>
-            <span className="update-toast__msg">{updateMsg}</span>
-            <button className="update-toast__close" onClick={() => setUpdateMsg('')}>✕</button>
-          </div>
-        )}
 
         {/* ── Footer ── */}
         <footer className="overlay__footer">
