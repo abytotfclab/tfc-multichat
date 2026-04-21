@@ -1,124 +1,125 @@
-import { app, BrowserWindow, ipcMain, shell, screen } from 'electron'
-import { join } from 'node:path'
-import fs from 'node:fs'
-import path from 'node:path'
-import { execSync } from 'node:child_process'
-import { validateLicenseRemote } from './firebase.js'
+import { app, BrowserWindow, shell, ipcMain, screen } from 'electron'
+import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { autoUpdater } from 'electron-updater'
+import { validateLicenseRemote } from './firebase'
+import { execSync } from 'child_process'
+import tmi from 'tmi.js'
+import { WebcastPushConnection } from 'tiktok-live-connector'
+import { LiveChat } from 'youtube-chat'
 
-// -- Persistence -----------------------------------------------------------
-const CONFIG_PATH = path.join(app.getPath('userData'), 'multichat-config.json')
+const indexHtml = join(__dirname, '../renderer/index.html')
+const preload = join(__dirname, '../preload/index.js')
 
-const DEFAULT_CONFIG = {
-  activePlatforms: [],
-  display: {
-    fontSize: 14,
-    showPlatformIcon: true,
-    opacity: 0.88,
-    alwaysOnTop: true,
-    theme: 'dark'
-  },
-  promotion: {
-    twitchUrl: 'https://www.twitch.tv/stopblaiperr',
-    tiktokUrl: 'https://vt.tiktok.com/ZS9Lxnv83YYmH-YUej5/',
-    youtubeUrl: 'https://www.youtube.com/live/LUFyNQQT8Ds?si=--TF1YzyHkAeudqo',
-    messageTemplate: '¡Ya estamos en vivo! 🔥\n\nAcompáñanos en:\n🟣 Twitch: {twitch}\n⚫ TikTok: {tiktok}\n🔴 YouTube: {youtube}'
-  },
-  ttsEnabled: false,
-  clickThrough: false,
-  giveawayCommand: '!sorteo'
-}
+let mainWindow = null
+let logsWindow = null
+let appLogs = []
+let twitchClient = null
+let tiktokClient = null
+let youtubeClient = null
+
+const CONFIG_PATH = join(app.getPath('userData'), 'config.json')
 
 function loadConfig() {
-  if (!fs.existsSync(CONFIG_PATH)) return DEFAULT_CONFIG
   try {
-    const data = fs.readFileSync(CONFIG_PATH, 'utf-8')
-    return { ...DEFAULT_CONFIG, ...JSON.parse(data) }
+    if (existsSync(CONFIG_PATH)) {
+      return JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'))
+    }
   } catch (e) {
-    return DEFAULT_CONFIG
+    console.error('Error loading config:', e)
+  }
+  return {
+    display: { width: 600, height: 800, alwaysOnTop: true, opacity: 0.88 },
+    licenseKey: "TFC-STREAMER-TEST-2026-OK",
+    tts: { enabled: true, voice: null, rate: 1, pitch: 1 }
   }
 }
 
-function saveConfig(config) {
+function saveConfig(cfg) {
   try {
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2))
-    return config
+    writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2))
   } catch (e) {
-    return config
+    console.error('Error saving config:', e)
   }
 }
 
-// -- HWID & Licensing Logic ------------------------------------------------
+function sendLog(type, message) {
+  const logEntry = { timestamp: new Date().toLocaleTimeString(), type, message: String(message) }
+  appLogs.push(logEntry)
+  if (appLogs.length > 500) appLogs.shift() 
+  
+  const windows = BrowserWindow.getAllWindows()
+  windows.forEach(win => {
+    if (!win.isDestroyed()) {
+      win.webContents.send('app:log', logEntry)
+    }
+  })
+  console.log(`[${type}] ${message}`)
+}
+
 function getHWID() {
-  console.log("[LICENSE] Obteniendo HWID...")
   try {
-    if (process.platform === 'win32') {
-      // wmic is usually faster than powershell for this
-      const output = execSync('wmic csproduct get uuid').toString().split('\n')[1].trim()
-      console.log("[LICENSE] HWID obtenido:", output)
-      return output
-    }
-    return 'UNSUPPORTED_PLATFORM'
+    const output = execSync('wmic csproduct get uuid').toString()
+    const uuid = output.split('\n')[1].trim()
+    return uuid
   } catch (e) {
-    console.error("[LICENSE] Error obteniendo HWID:", e.message)
-    // Fallback attempt with powershell if wmic fails
-    try {
-      const output = execSync('powershell -Command "[guid]::Empty.ToString()"').toString().trim()
-      return output
-    } catch (e2) {
-      return 'UNKNOWN_HWID'
-    }
+    sendLog('ERROR', 'Failed to get HWID')
+    return 'UNKNOWN-HWID-' + Math.random().toString(36).substr(2, 9)
   }
 }
 
 async function verifyLicense(key, hwid) {
   if (!key) return false
-  
-  try {
-    // Add a 10s timeout to prevent hanging the UI
-    const validationPromise = validateLicenseRemote(key, hwid)
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('TIMEOUT')), 10000)
-    )
-
-    const res = await Promise.race([validationPromise, timeoutPromise])
-    return res.success
-  } catch (e) {
-    console.error("[LICENSE] Error en verificación:", e.message)
-    return false
-  }
+  const res = await validateLicenseRemote(key, hwid)
+  return res.success
 }
 
-let mainWindow = null
 let config = loadConfig()
 let lastBounds = { width: 600, height: 800, x: 100, y: 100 }
 let myMaximizedState = false
 
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
-
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 600,
-    height: 800,
+    width: config.display?.width || 600,
+    height: config.display?.height || 800,
+    minWidth: 400,
+    minHeight: 500,
     show: false,
     frame: false,
     transparent: true,
-    resizable: true,
     alwaysOnTop: config.display?.alwaysOnTop ?? true,
     opacity: config.display?.opacity ?? 0.88,
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      backgroundThrottling: false
+      preload,
+      nodeIntegration: false,
+      contextIsolation: true
     }
+  })
+
+  ipcMain.handle('updater:quit-and-install', () => {
+    autoUpdater.quitAndInstall()
+  })
+
+  autoUpdater.on('update-available', (info) => {
+    sendLog('UPDATER', `Update available: v${info.version}`)
+    mainWindow?.webContents.send('update:status', 'UPDATE_AVAILABLE')
+  })
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendLog('UPDATER', `Update v${info.version} downloaded`)
+    mainWindow?.webContents.send('update:status', 'UPDATE_DOWNLOADED')
+  })
+
+  autoUpdater.on('error', (err) => {
+    sendLog('ERROR', `Updater Error: ${err.message}`)
   })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
 
-  // Listeners to keep state in sync
   mainWindow.on('maximize', () => {
     myMaximizedState = true
     mainWindow.webContents.send('win:maximized-status', true)
@@ -128,14 +129,13 @@ function createWindow() {
     mainWindow.webContents.send('win:maximized-status', false)
   })
 
-  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+  if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(indexHtml)
   }
 }
 
-// -- Platform Handlers -----------------------------------------------------
 let status = {
   twitch: { connected: false, channel: '' },
   tiktok: { connected: false, username: '' },
@@ -147,113 +147,185 @@ function updateStatus(platform, data) {
   mainWindow?.webContents.send('status:update', status)
 }
 
-// Twitch Setup
-import tmi from 'tmi.js'
-let twitchClient = null
-async function connectTwitch(channel) {
-  if (twitchClient) {
-    try { await twitchClient.disconnect() } catch(e) {}
+// -- Platform Handlers -----------------------------------------------------
+
+async function connectTwitch(input) {
+  let channel = input.trim()
+  if (channel.includes('twitch.tv/')) {
+    channel = channel.split('twitch.tv/')[1].split('/')[0].split('?')[0]
   }
   
-  try {
-    twitchClient = new tmi.Client({ channels: [channel] })
-    await twitchClient.connect()
+  sendLog('TWITCH', `Connecting to channel: ${channel} (Viewer Mode)`)
+  if (twitchClient) {
+    try { await twitchClient.disconnect() } catch (e) {}
+  }
+
+  twitchClient = new tmi.Client({
+    options: { debug: false },
+    connection: { reconnect: true, secure: true, timeout: 10000 },
+    channels: [channel]
+  })
+
+  twitchClient.on('connected', () => {
+    sendLog('TWITCH', `Successfully connected to ${channel}`)
     updateStatus('twitch', { connected: true, channel })
-    
-    // Reset listeners
-    twitchClient.removeAllListeners('message')
-    twitchClient.on('message', (chan, tags, message, self) => {
+  })
+  
+  twitchClient.on('disconnected', (reason) => {
+    sendLog('TWITCH', `Disconnected: ${reason}`)
+    updateStatus('twitch', { connected: false })
+  })
+  
+  twitchClient.on('message', (chan, tags, message, self) => {
     if (self) return
+    sendLog('TWITCH_MSG', `${tags.username}: ${message}`)
     mainWindow?.webContents.send('chat:message', {
-      id: tags.id, type: 'chat', platform: 'twitch', author: tags['display-name'] || tags.username,
-      message, color: tags.color || '#9146FF', avatar: '', badges: tags.badges || {},
+      id: tags.id, 
+      type: 'chat', 
+      platform: 'twitch', 
+      author: tags['display-name'] || tags.username,
+      message, 
+      color: tags.color || '#9146FF', 
+      avatar: '', 
+      badges: tags.badges ? Object.keys(tags.badges) : [],
       timestamp: Date.now()
     })
   })
 
-  // Twitch Events
-  twitchClient.on('subscription', (channel, username, method, message, userstate) => {
+  twitchClient.on('subscription', (channel, username) => {
     mainWindow?.webContents.send('chat:message', {
       type: 'event', event: 'sub', platform: 'twitch', author: username,
       message: `¡Nueva suscripción! 💖`, color: '#f500ff', timestamp: Date.now()
     })
   })
 
-  twitchClient.on('resub', (channel, username, months, message, userstate, methods) => {
-    mainWindow?.webContents.send('chat:message', {
-      type: 'event', event: 'resub', platform: 'twitch', author: username,
-      message: `¡Suscripción por ${months} meses! 🔥`, color: '#f500ff', timestamp: Date.now()
-    })
-  })
-
-    twitchClient.on('cheer', (channel, userstate, message) => {
-      mainWindow?.webContents.send('chat:message', {
-        type: 'event', event: 'cheer', platform: 'twitch', author: userstate['display-name'],
-        message: `¡Envió ${userstate.bits} bits! 💎`, color: '#ffea00', timestamp: Date.now()
-      })
-    })
-
+  try {
+    await twitchClient.connect()
     return { ok: true }
   } catch (e) {
-    console.error("[TWITCH] Error:", e.message)
+    sendLog('ERROR', `Twitch failed for ${channel}: ${e.message}`)
     return { ok: false, error: e.message }
   }
 }
 
-// TikTok Setup
-import { WebcastPushConnection } from 'tiktok-live-connector'
-let tiktokClient = null
-async function connectTikTok(username) {
-  if (tiktokClient) {
-    try { await tiktokClient.disconnect() } catch(e) {}
+async function connectTikTok(input) {
+  let username = input.trim()
+  if (username.includes('tiktok.com/')) {
+    const parts = username.split('@')
+    if (parts.length > 1) username = parts[1].split('/')[0].split('?')[0]
+  } else if (username.startsWith('@')) {
+    username = username.substring(1)
   }
 
-  try {
-    tiktokClient = new WebcastPushConnection(username)
-    await tiktokClient.connect()
-    updateStatus('tiktok', { connected: true, username })
+  sendLog('TIKTOK', `Connecting to user: ${username} (Viewer Mode)`)
+  if (tiktokClient) {
+    try { tiktokClient.disconnect() } catch (e) {}
+  }
 
-    tiktokClient.on('chat', data => {
+  tiktokClient = new WebcastPushConnection(username, {
+    enableExtendedGiftInfo: true,
+    requestPollingIntervalMs: 2000
+  })
+
+  tiktokClient.on('connected', () => {
+    sendLog('TIKTOK', `Connected to ${username}`)
+    updateStatus('tiktok', { connected: true, username })
+  })
+  
+  tiktokClient.on('disconnected', (reason) => {
+    sendLog('TIKTOK', `Disconnected: ${reason}`)
+    updateStatus('tiktok', { connected: false })
+  })
+
+  tiktokClient.on('chat', data => {
+    sendLog('TIKTOK_MSG', `${data.uniqueId}: ${data.comment}`)
+    const badges = []
+    if (data.isModerator) badges.push('moderator')
+    if (data.isNewGifter) badges.push('subscriber')
+    
     mainWindow?.webContents.send('chat:message', {
-      id: data.msgId, type: 'chat', platform: 'tiktok', author: data.nickname || data.uniqueId,
-      message: data.comment, color: '#00f5ff', avatar: data.profilePictureUrl,
-      badges: { moderator: data.isModerator, vips: data.isNewGifter },
+      id: data.msgId, 
+      type: 'chat', 
+      platform: 'tiktok', 
+      author: data.nickname || data.uniqueId,
+      message: data.comment, 
+      color: '#00f5ff', 
+      avatar: data.profilePictureUrl,
+      badges,
       timestamp: Date.now()
     })
   })
 
-  // TikTok Events
-  tiktokClient.on('gift', data => {
-    if (data.repeatEnd) { // Only show when the combo ends to avoid spam
-      mainWindow?.webContents.send('chat:message', {
-        type: 'event', event: 'gift', platform: 'tiktok', author: data.nickname || data.uniqueId,
-        message: `¡Regaló ${data.repeatCount}x ${data.giftName}! 🎁`, 
-        color: '#ff0050', avatar: data.profilePictureUrl, timestamp: Date.now()
-      })
-    }
-  })
+  try {
+    await tiktokClient.connect()
+    return { ok: true }
+  } catch (e) {
+    sendLog('ERROR', `TikTok failed for ${username}: ${e.message}`)
+    return { ok: false, error: e.message }
+  }
+}
 
-  tiktokClient.on('social', data => {
-    if (data.displayType === 'pm_mt_guidance_viewer_follow') {
-      mainWindow?.webContents.send('chat:message', {
-        type: 'event', event: 'follow', platform: 'tiktok', author: data.nickname || data.uniqueId,
-        message: `¡Te empezó a seguir! ✅`, color: '#00f5ff', 
-        avatar: data.profilePictureUrl, timestamp: Date.now()
-      })
-    }
-  })
+async function connectYouTube(input) {
+  let channelUrl = input.trim()
+  sendLog('YOUTUBE', `Connecting to: ${channelUrl} (Viewer Mode)`)
+  
+  if (youtubeClient) {
+    try { youtubeClient.stop() } catch (e) {}
+  }
 
-    tiktokClient.on('member', data => {
+  try {
+    // Determine channelId, handle, or liveId
+    if (channelUrl.includes('v=')) {
+      const liveId = channelUrl.split('v=')[1].split('&')[0]
+      youtubeClient = new LiveChat({ liveId })
+    } else if (channelUrl.includes('youtube.com/live/')) {
+      const liveId = channelUrl.split('/live/')[1].split('?')[0].split('/')[0]
+      youtubeClient = new LiveChat({ liveId })
+    } else if (channelUrl.includes('youtube.com/channel/')) {
+      const channelId = channelUrl.split('youtube.com/channel/')[1].split('/')[0].split('?')[0]
+      youtubeClient = new LiveChat({ channelId })
+    } else if (channelUrl.includes('youtube.com/')) {
+      let handle = channelUrl.split('youtube.com/')[1].split('/')[0].split('?')[0]
+      if (!handle.startsWith('@')) handle = '@' + handle
+      youtubeClient = new LiveChat({ handle })
+    } else {
+      // Assume it's a handle or channel ID
+      if (channelUrl.startsWith('UC')) youtubeClient = new LiveChat({ channelId: channelUrl })
+      else youtubeClient = new LiveChat({ handle: channelUrl.startsWith('@') ? channelUrl : '@' + channelUrl })
+    }
+
+    youtubeClient.on('start', (liveId) => {
+      sendLog('YOUTUBE', `Successfully connected (Live ID: ${liveId})`)
+      updateStatus('youtube', { connected: true, channel: 'Live' })
+    })
+
+    youtubeClient.on('chat', (item) => {
+      const message = item.message.map(m => m.text).join('')
+      sendLog('YOUTUBE_MSG', `${item.author.name}: ${message}`)
+      
       mainWindow?.webContents.send('chat:message', {
-        type: 'event', event: 'join', platform: 'tiktok', author: data.nickname || data.uniqueId,
-        message: `¡Se unió al LIVE! 👋`, color: '#00f5ff', 
-        avatar: data.profilePictureUrl, timestamp: Date.now()
+        id: item.id,
+        type: 'chat',
+        platform: 'youtube',
+        author: item.author.name,
+        message: message,
+        color: '#FF0000',
+        avatar: item.author.thumbnail?.url || '',
+        badges: item.author.badge ? [item.author.badge.label] : [],
+        timestamp: Date.now()
       })
     })
 
+    youtubeClient.on('error', (err) => {
+      sendLog('ERROR', `YouTube Error: ${err.message}`)
+    })
+
+    const ok = await youtubeClient.start()
+    if (!ok) throw new Error('No live stream found or failed to start.')
+    
     return { ok: true }
   } catch (e) {
-    console.error("[TIKTOK] Error:", e.message)
+    sendLog('ERROR', `YouTube failed: ${e.message}`)
     return { ok: false, error: e.message }
   }
 }
@@ -261,7 +333,6 @@ async function connectTikTok(username) {
 app.whenReady().then(() => {
   createWindow()
 
-  // -- Auto-Updater Logic ----------------------------------------------------
   autoUpdater.autoDownload = true
   autoUpdater.checkForUpdatesAndNotify()
 
@@ -274,17 +345,25 @@ app.whenReady().then(() => {
     }
   })
 
-  autoUpdater.on('update-available', () => {
-    mainWindow?.webContents.send('update:status', 'Disponible nueva versión. Descargando...')
+  ipcMain.handle('win:open-logs', () => {
+    if (logsWindow) {
+      logsWindow.focus()
+      return
+    }
+    logsWindow = new BrowserWindow({
+      width: 600, height: 400, title: 'Activity Logs',
+      autoHideMenuBar: true, backgroundColor: '#08080c',
+      webPreferences: { preload, nodeIntegration: false, contextIsolation: true }
+    })
+    if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
+      logsWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#logs`)
+    } else {
+      logsWindow.loadFile(indexHtml, { hash: 'logs' })
+    }
+    logsWindow.on('closed', () => { logsWindow = null })
   })
 
-  autoUpdater.on('update-downloaded', () => {
-    mainWindow?.webContents.send('update:status', 'Actualización lista. Reinicia para aplicar.')
-  })
-
-  autoUpdater.on('error', (err) => {
-    console.error('[UPDATER] Error:', err)
-  })
+  ipcMain.handle('app:get-logs', () => appLogs)
 
   ipcMain.handle('config:get', () => config)
   ipcMain.handle('config:save', (_, partial) => {
@@ -296,73 +375,71 @@ app.whenReady().then(() => {
 
   ipcMain.handle('status:get', () => status)
   ipcMain.handle('app:openExternal', (_, url) => shell.openExternal(url))
+  
   ipcMain.handle('twitch:connect',  (_, { channel }) => connectTwitch(channel))
   ipcMain.handle('twitch:disconnect', () => { twitchClient?.disconnect(); updateStatus('twitch', { connected: false }) })
+  
   ipcMain.handle('tiktok:connect',   (_, { username }) => connectTikTok(username))
   ipcMain.handle('tiktok:disconnect', () => { tiktokClient?.disconnect(); updateStatus('tiktok', { connected: false }) })
-  ipcMain.handle('youtube:connect',    () => { updateStatus('youtube', { connected: true, channel: 'Live' }); return { ok: true } })
-  ipcMain.handle('youtube:disconnect', () => { updateStatus('youtube', { connected: false }); return { ok: true } })
-
-  // -- Login Handlers --------------------------------------------------------
-  async function openLoginWindow(url, title) {
-    return new Promise((resolve) => {
-      const loginWin = new BrowserWindow({
-        width: 600,
-        height: 800,
-        title: title,
-        parent: mainWindow,
-        modal: true,
-        show: false,
-        frame: true,
-        transparent: false,
-        alwaysOnTop: true, // Crucial as the main window might be pinned
-        autoHideMenuBar: true,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true
-        }
-      })
-
-      loginWin.loadURL(url)
-      loginWin.once('ready-to-show', () => loginWin.show())
-
-      loginWin.on('closed', () => {
-        resolve({ ok: true })
-      })
-    })
-  }
+  
+  ipcMain.handle('youtube:connect',    (_, input) => connectYouTube(input))
+  ipcMain.handle('youtube:disconnect', () => { youtubeClient?.stop(); updateStatus('youtube', { connected: false }); return { ok: true } })
 
   ipcMain.handle('twitch:login', async () => {
     return await openLoginWindow('https://www.twitch.tv/login', 'Login Twitch')
   })
-
   ipcMain.handle('tiktok:login', async () => {
     return await openLoginWindow('https://www.tiktok.com/login', 'Login TikTok')
   })
-
   ipcMain.handle('youtube:login', async () => {
     return await openLoginWindow('https://accounts.google.com/ServiceLogin?service=youtube', 'Login YouTube')
   })
 
+  async function openLoginWindow(url, title) {
+    return new Promise((resolve) => {
+      const loginWin = new BrowserWindow({
+        width: 600, height: 800, title, parent: mainWindow,
+        modal: true, show: false, frame: true, transparent: false,
+        alwaysOnTop: true, autoHideMenuBar: true,
+        webPreferences: { nodeIntegration: false, contextIsolation: true }
+      })
+      loginWin.loadURL(url)
+      loginWin.once('ready-to-show', () => loginWin.show())
+      loginWin.on('closed', () => resolve({ ok: true }))
+    })
+  }
+
   ipcMain.handle('win:close',          () => mainWindow?.hide())
   ipcMain.handle('win:quit',           () => { app.exit(0) })
   ipcMain.handle('win:minimize',       () => mainWindow?.minimize())
+  ipcMain.handle('win:maximize', () => {
+    if (!mainWindow) return false
+    if (myMaximizedState) {
+      mainWindow.unmaximize()
+      if (lastBounds) mainWindow.setBounds(lastBounds, true)
+      myMaximizedState = false
+    } else {
+      lastBounds = mainWindow.getBounds()
+      mainWindow.maximize()
+      myMaximizedState = true
+    }
+    mainWindow.webContents.send('win:maximized-status', myMaximizedState)
+    return myMaximizedState
+  })
 
-  // License Handlers
+  ipcMain.handle('win:setOpacity',     (_, v) => mainWindow?.setOpacity(v))
+  ipcMain.handle('win:setAlwaysOnTop', (_, v) => mainWindow?.setAlwaysOnTop(v))
+  ipcMain.handle('win:setIgnoreMouseEvents', (_, v) => mainWindow?.setIgnoreMouseEvents(v, { forward: true }))
+
   ipcMain.handle('license:get-status', async () => {
     const hwid = getHWID()
     const key = config.licenseKey || null
     const isValid = await verifyLicense(key, hwid)
-    return {
-      isValid,
-      hwid,
-      key
-    }
+    return { isValid, hwid, key }
   })
 
   ipcMain.handle('license:activate', async (_, key) => {
     const hwid = getHWID()
-    // Directly use remote validation for activation to get the error message
     const res = await validateLicenseRemote(key, hwid)
     if (res.success) {
       config.licenseKey = key
@@ -371,47 +448,6 @@ app.whenReady().then(() => {
     }
     return { success: false, error: res.error }
   })
-  
-  ipcMain.handle('win:maximize', () => {
-    if (!mainWindow) return false
-    
-    // Toggle state logic
-    if (myMaximizedState) {
-      // Restore standard size
-      mainWindow.unmaximize()
-      if (lastBounds) {
-        mainWindow.setBounds(lastBounds, true)
-      } else {
-        mainWindow.setSize(600, 800, true)
-      }
-      myMaximizedState = false
-    } else {
-      // Save current bounds to restore them later
-      lastBounds = mainWindow.getBounds()
-      
-      // Attempt native maximize
-      mainWindow.maximize()
-      
-      // Fallback: If native maximize doesn't seem to work (common for transparent windows), 
-      // we manually set the size to the work area.
-      setTimeout(() => {
-        if (!mainWindow.isMaximized()) {
-          const primaryDisplay = screen.getPrimaryDisplay()
-          const { width, height } = primaryDisplay.workAreaSize
-          mainWindow.setBounds({ x: 0, y: 0, width, height }, true)
-        }
-      }, 100)
-      
-      myMaximizedState = true
-    }
-    
-    mainWindow.webContents.send('win:maximized-status', myMaximizedState)
-    return myMaximizedState
-  })
-
-  ipcMain.handle('win:setOpacity',     (_, v) => mainWindow?.setOpacity(v))
-  ipcMain.handle('win:setAlwaysOnTop', (_, v) => mainWindow?.setAlwaysOnTop(v))
-  ipcMain.handle('win:setIgnoreMouseEvents', (_, v) => mainWindow?.setIgnoreMouseEvents(v, { forward: true }))
 
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 })

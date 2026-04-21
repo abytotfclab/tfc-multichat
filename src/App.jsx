@@ -14,7 +14,47 @@ const PLATFORMS = [
   { id: 'youtube', icon: '❤️', color: '#FF0000' },
 ]
 
-export default function App() {
+function LogsView() {
+  const [logs, setLogs] = React.useState([])
+  const bottomRef = React.useRef(null)
+
+  React.useEffect(() => {
+    // Initial logs
+    window.electron?.getLogs().then(setLogs)
+    
+    // Live logs
+    window.electron?.onLog(newLog => {
+      setLogs(prev => [...prev, newLog].slice(-500))
+    })
+  }, [])
+
+  React.useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logs])
+
+  return (
+    <div className="logs-window">
+      <div className="logs-header">Activity Logs</div>
+      <div className="logs-content">
+        {logs.map((log, i) => (
+          <div key={i} className={`log-entry log-${log.type.toLowerCase()}`}>
+            <span className="log-time">[{log.timestamp}]</span>
+            <span className="log-type">[{log.type}]</span>
+            <span className="log-msg">{log.message}</span>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+    </div>
+  )
+}
+
+export default function Root() {
+  const isLogs = window.location.hash === '#logs'
+  return isLogs ? <LogsView /> : <App />
+}
+
+function App() {
   const { 
     init, status, messages, clearMessages, isPaused, togglePause, 
     toggleFilter, filters, ttsEnabled, toggleTTS, toggleGiveawayUI, 
@@ -46,12 +86,9 @@ export default function App() {
 
     window.electron?.onMaximizedStatus(setIsMaximized)
 
-    window.electron?.onUpdateStatus(msg => {
-      setUpdateMsg(msg)
-      // Auto hide after 10s if it's just a message
-      if (!msg.includes('Reinicia')) {
-        setTimeout(() => setUpdateMsg(''), 10000)
-      }
+    window.electron?.onUpdateStatus(st => {
+      if (st === 'UPDATE_AVAILABLE') setUpdateMsg('Descargando nueva versión...')
+      if (st === 'UPDATE_DOWNLOADED') setUpdateMsg('¡Actualización lista!')
     })
   }, [])
 
@@ -94,6 +131,19 @@ export default function App() {
     const next = !isClickThrough
     setIsClickThrough(next)
     window.electron?.setIgnoreMouseEvents(next)
+  }
+
+  async function handleManualUpdate() {
+    setUpdateMsg('Buscando...')
+    const res = await window.electron?.checkForUpdates()
+    if (!res?.success) {
+      setUpdateMsg('No hay actualizaciones')
+      setTimeout(() => setUpdateMsg(''), 3000)
+    }
+  }
+
+  function handleInstallUpdate() {
+    window.electron?.quitAndInstall()
   }
 
   function handleMaximize() {
@@ -147,7 +197,14 @@ export default function App() {
           {/* Brand */}
           <div className="header__brand">
             <span className="brand__logo">MC</span>
-            <span className="brand__version">v1.0.3</span>
+            <span 
+              className="brand__version clickable" 
+              style={{ WebkitAppRegion: 'no-drag' }}
+              onClick={() => window.electron?.openLogs()}
+              title="Click para ver logs"
+            >
+              v1.0.4
+            </span>
             {connectedCount > 0 && (
               <span className="brand__count">{connectedCount}</span>
             )}
@@ -291,7 +348,30 @@ export default function App() {
               )
             })}
           </div>
-          <button className="footer__clear" onClick={clearMessages} title="Limpiar mensajes">🗑</button>
+
+          <div className="footer__center">
+            {updateMsg && (
+              <div className="footer__update-msg">
+                <span className="update-icon">🚀</span> {updateMsg}
+                {updateMsg === '¡Actualización lista!' && (
+                  <button className="btn-install" onClick={handleInstallUpdate}>INSTALAR</button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="footer__actions">
+            {!updateMsg && (
+              <button 
+                className="footer__btn footer__btn--updater" 
+                onClick={handleManualUpdate} 
+                title="Buscando actualizaciones..."
+              >
+                🔄 BUSCAR ACTUALIZACIÓN
+              </button>
+            )}
+            <button className="footer__btn" onClick={clearMessages} title="Limpiar mensajes">🗑</button>
+          </div>
         </footer>
       </div>
     </LicenseGuard>

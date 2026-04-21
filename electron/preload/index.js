@@ -4,11 +4,15 @@ contextBridge.exposeInMainWorld('electron', {
   // Utils
   openExternal:   (url) => ipcRenderer.invoke('app:openExternal', url),
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
+  quitAndInstall: () => ipcRenderer.invoke('updater:quit-and-install'),
 
   // Window
   close:          () => ipcRenderer.invoke('win:close'),
   quit:           () => ipcRenderer.invoke('win:quit'),
   minimize:       () => ipcRenderer.invoke('win:minimize'),
+  openLogs:       () => ipcRenderer.invoke('win:open-logs'),
+  getLogs:        () => ipcRenderer.invoke('app:get-logs'),
+  onLog:          (callback) => ipcRenderer.on('app:log', (_, log) => callback(log)),
   maximize:       () => ipcRenderer.invoke('win:maximize'),
   setOpacity:     (v) => ipcRenderer.invoke('win:setOpacity', v),
   setAlwaysOnTop: (v) => ipcRenderer.invoke('win:setAlwaysOnTop', v),

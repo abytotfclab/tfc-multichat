@@ -74,7 +74,8 @@ export const useChatStore = create((set, get) => ({
         config, giveawayMode, giveawayFilters, guessWord, guessActive, winner 
       } = get()
       
-      const isModOrHigher = msg.badges?.includes('moderator') || msg.badges?.includes('broadcaster')
+      const badges = Array.isArray(msg.badges) ? msg.badges : []
+      const isModOrHigher = badges.includes('moderator') || badges.includes('broadcaster')
 
       // -- Giveaway Logic --
       if (giveawayFilters[msg.platform]) {

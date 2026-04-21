@@ -111,6 +111,7 @@
   color: #fff;
   font-size: 13px;
   transition: all 0.2s;
+  -webkit-app-region: no-drag;
 }
 
 .input:focus {
@@ -133,6 +134,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  -webkit-app-region: no-drag;
 }
 
 .btn:active { transform: scale(0.96); }

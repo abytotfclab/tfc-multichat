@@ -1,6 +1,6 @@
 {
   "name": "tfc-multichat-streamer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TFC Lab: MultiChat Overlay — Twitch + TikTok + YouTube",
   "main": "out/main/index.js",
   "author": "TFC Lab",
@@ -15,6 +15,7 @@
     "firebase": "^12.12.0",
     "tiktok-live-connector": "^1.1.7",
     "tmi.js": "^1.8.5",
+    "youtube-chat": "^2.2.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -55,6 +56,8 @@
       "assets/**/*",
       "node_modules/tmi.js/**/*",
       "node_modules/tiktok-live-connector/**/*",
+      "node_modules/youtube-chat/**/*",
+      "node_modules/axios/**/*",
       "!node_modules/**/*.md",
       "!node_modules/**/*.map"
     ],
